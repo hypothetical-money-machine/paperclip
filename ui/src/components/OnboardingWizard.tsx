@@ -39,6 +39,7 @@ import {
 } from "@paperclipai/adapter-codex-local";
 import { DEFAULT_CURSOR_LOCAL_MODEL } from "@paperclipai/adapter-cursor-local";
 import { DEFAULT_GEMINI_LOCAL_MODEL } from "@paperclipai/adapter-gemini-local";
+import { DEFAULT_KIMI_LOCAL_MODEL } from "@paperclipai/adapter-kimi-local";
 import { resolveRouteOnboardingOptions } from "../lib/onboarding-route";
 import { AsciiArtAnimation } from "./AsciiArtAnimation";
 import {
@@ -63,6 +64,13 @@ const DEFAULT_TASK_DESCRIPTION = `You are the CEO. You set the direction for the
 - hire a founding engineer
 - write a hiring plan
 - break the roadmap into concrete tasks and start delegating work`;
+
+const DEFAULT_ADAPTER_MODELS: Partial<Record<string, string>> = {
+  codex_local: DEFAULT_CODEX_LOCAL_MODEL,
+  gemini_local: DEFAULT_GEMINI_LOCAL_MODEL,
+  kimi_local: DEFAULT_KIMI_LOCAL_MODEL,
+  cursor: DEFAULT_CURSOR_LOCAL_MODEL,
+};
 
 export function OnboardingWizard() {
   const { onboardingOpen, onboardingOptions, closeOnboarding } = useDialog();
@@ -218,6 +226,7 @@ export function OnboardingWizard() {
     codex_local: "codex",
     gemini_local: "gemini",
     pi_local: "pi",
+    kimi_local: "kimi",
     cursor: "agent",
     opencode_local: "opencode",
   };
@@ -314,14 +323,7 @@ export function OnboardingWizard() {
     const config = adapter.buildAdapterConfig({
       ...defaultCreateValues,
       adapterType,
-      model:
-        adapterType === "codex_local"
-          ? model || DEFAULT_CODEX_LOCAL_MODEL
-          : adapterType === "gemini_local"
-            ? model || DEFAULT_GEMINI_LOCAL_MODEL
-          : adapterType === "cursor"
-          ? model || DEFAULT_CURSOR_LOCAL_MODEL
-          : model,
+      model: model || DEFAULT_ADAPTER_MODELS[adapterType] || "",
       command,
       args,
       url,
@@ -766,12 +768,8 @@ export function OnboardingWizard() {
                           onClick={() => {
                             const nextType = opt.type;
                             setAdapterType(nextType);
-                            if (nextType === "codex_local" && !model) {
-                              setModel(DEFAULT_CODEX_LOCAL_MODEL);
-                            }
-                            if (nextType !== "codex_local") {
-                              setModel("");
-                            }
+                            const defaultModel = DEFAULT_ADAPTER_MODELS[nextType];
+                            setModel(defaultModel ? (model || defaultModel) : "");
                           }}
                         >
                           {opt.recommended && (
@@ -1027,6 +1025,8 @@ export function OnboardingWizard() {
                                 ? `${effectiveAdapterCommand} --output-format json "Respond with hello."`
                               : adapterType === "opencode_local"
                                 ? `${effectiveAdapterCommand} run --format json "Respond with hello."`
+                              : adapterType === "kimi_local"
+                                ? `${effectiveAdapterCommand} --print --output-format stream-json --verbose`
                               : `${effectiveAdapterCommand} --print - --output-format stream-json --verbose`}
                           </p>
                           <p className="text-muted-foreground">
@@ -1036,6 +1036,7 @@ export function OnboardingWizard() {
                           {adapterType === "cursor" ||
                           adapterType === "codex_local" ||
                           adapterType === "gemini_local" ||
+                          adapterType === "kimi_local" ||
                           adapterType === "opencode_local" ? (
                             <p className="text-muted-foreground">
                               If auth fails, set{" "}
@@ -1044,7 +1045,9 @@ export function OnboardingWizard() {
                                   ? "CURSOR_API_KEY"
                                   : adapterType === "gemini_local"
                                     ? "GEMINI_API_KEY"
-                                    : "OPENAI_API_KEY"}
+                                    : adapterType === "kimi_local"
+                                      ? "KIMI_API_KEY"
+                                      : "OPENAI_API_KEY"}
                               </span>{" "}
                               in env or run{" "}
                               <span className="font-mono">
@@ -1054,7 +1057,9 @@ export function OnboardingWizard() {
                                     ? "codex login"
                                     : adapterType === "gemini_local"
                                       ? "gemini auth"
-                                      : "opencode auth login"}
+                                      : adapterType === "kimi_local"
+                                        ? "kimi login"
+                                        : "opencode auth login"}
                               </span>
                               .
                             </p>

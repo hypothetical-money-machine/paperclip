@@ -726,6 +726,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                       codex_local: "codex",
                       gemini_local: "gemini",
                       pi_local: "pi",
+                      kimi_local: "kimi",
                       cursor: "agent",
                       opencode_local: "opencode",
                     } as Record<string, string>)[adapterType] ?? adapterType.replace(/_local$/, "")

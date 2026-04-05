@@ -84,7 +84,7 @@ type StagedIssueFile = {
   title?: string | null;
 };
 
-const ISSUE_OVERRIDE_ADAPTER_TYPES = new Set(["claude_local", "codex_local", "opencode_local"]);
+const ISSUE_OVERRIDE_ADAPTER_TYPES = new Set(["claude_local", "codex_local", "opencode_local", "kimi_local"]);
 const STAGED_FILE_ACCEPT = "image/*,application/pdf,text/plain,text/markdown,application/json,text/csv,text/html,.md,.markdown";
 
 const ISSUE_THINKING_EFFORT_OPTIONS = {
@@ -111,6 +111,11 @@ const ISSUE_THINKING_EFFORT_OPTIONS = {
     { value: "xhigh", label: "X-High" },
     { value: "max", label: "Max" },
   ],
+  kimi_local: [
+    { value: "", label: "Default" },
+    { value: "on", label: "On" },
+    { value: "off", label: "Off" },
+  ],
 } as const;
 
 function buildAssigneeAdapterOverrides(input: {
@@ -135,6 +140,8 @@ function buildAssigneeAdapterOverrides(input: {
       adapterConfig.effort = input.thinkingEffortOverride;
     } else if (adapterType === "opencode_local") {
       adapterConfig.variant = input.thinkingEffortOverride;
+    } else if (adapterType === "kimi_local") {
+      adapterConfig.thinking = input.thinkingEffortOverride === "on";
     }
   }
   if (adapterType === "claude_local" && input.chrome) {
@@ -576,11 +583,8 @@ export function NewIssueDialog() {
     }
 
     const validThinkingValues =
-      assigneeAdapterType === "codex_local"
-        ? ISSUE_THINKING_EFFORT_OPTIONS.codex_local
-        : assigneeAdapterType === "opencode_local"
-          ? ISSUE_THINKING_EFFORT_OPTIONS.opencode_local
-          : ISSUE_THINKING_EFFORT_OPTIONS.claude_local;
+      ISSUE_THINKING_EFFORT_OPTIONS[assigneeAdapterType as keyof typeof ISSUE_THINKING_EFFORT_OPTIONS]
+      ?? ISSUE_THINKING_EFFORT_OPTIONS.claude_local;
     if (!validThinkingValues.some((option) => option.value === assigneeThinkingEffort)) {
       setAssigneeThinkingEffort("");
     }
@@ -783,11 +787,8 @@ export function NewIssueDialog() {
           ? "OpenCode options"
         : "Agent options";
   const thinkingEffortOptions =
-    assigneeAdapterType === "codex_local"
-      ? ISSUE_THINKING_EFFORT_OPTIONS.codex_local
-      : assigneeAdapterType === "opencode_local"
-        ? ISSUE_THINKING_EFFORT_OPTIONS.opencode_local
-      : ISSUE_THINKING_EFFORT_OPTIONS.claude_local;
+    ISSUE_THINKING_EFFORT_OPTIONS[assigneeAdapterType as keyof typeof ISSUE_THINKING_EFFORT_OPTIONS]
+    ?? ISSUE_THINKING_EFFORT_OPTIONS.claude_local;
   const recentAssigneeIds = useMemo(() => getRecentAssigneeIds(), [newIssueOpen]);
   const assigneeOptions = useMemo<InlineEntityOption[]>(
     () => [
