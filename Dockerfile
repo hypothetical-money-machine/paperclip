@@ -56,16 +56,15 @@ ARG USER_UID=1000
 ARG USER_GID=1000
 WORKDIR /app
 COPY --chown=node:node --from=build /app /app
-RUN npm install --global --omit=dev @anthropic-ai/claude-code@latest @openai/codex@latest opencode-ai \
+RUN npm install --global --omit=dev @anthropic-ai/claude-code@latest @openai/codex@latest opencode-ai @google/gemini-cli@latest \
   && export PATH="$HOME/.local/bin:$PATH" \
   # TODO: pin kimi CLI version once versioned releases are available
   && curl -LsSf https://code.kimi.com/install.sh | bash \
   && cp -r $HOME/.local/bin/* /usr/local/bin/ \
   && ln -s /app/cli/dist/index.js /usr/local/bin/paperclipai \
-  && mkdir -p /paperclip/.kimi \
+  && mkdir -p /paperclip/.codex /paperclip/.gemini /paperclip/.kimi \
   && printf '[providers."kimi-code"]\ntype = "kimi"\nbase_url = "https://api.kimi.com/coding/v1"\napi_key = ""\n' > /paperclip/.kimi/config.toml \
-  && mkdir -p /paperclip \
-  && chown -R node:node /paperclip
+  && mkdir -p /paperclip
 
 COPY scripts/docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
