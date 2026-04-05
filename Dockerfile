@@ -47,6 +47,7 @@ COPY --from=deps /app /app
 COPY . .
 RUN pnpm --filter @paperclipai/ui build
 RUN pnpm --filter @paperclipai/plugin-sdk build
+RUN pnpm --filter @paperclipai/cli build
 RUN pnpm --filter @paperclipai/server build
 RUN test -f server/dist/index.js || (echo "ERROR: server build output missing" && exit 1)
 
@@ -60,6 +61,7 @@ RUN npm install --global --omit=dev @anthropic-ai/claude-code@latest @openai/cod
   # TODO: pin kimi CLI version once versioned releases are available
   && curl -LsSf https://code.kimi.com/install.sh | bash \
   && cp -r $HOME/.local/bin/* /usr/local/bin/ \
+  && ln -s /app/cli/dist/index.js /usr/local/bin/paperclipai \
   && mkdir -p /paperclip/.kimi \
   && printf '[providers."kimi-code"]\ntype = "kimi"\nbase_url = "https://api.kimi.com/coding/v1"\napi_key = ""\n' > /paperclip/.kimi/config.toml \
   && mkdir -p /paperclip \
